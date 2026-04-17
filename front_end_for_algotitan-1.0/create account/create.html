@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenNote | Create Account</title>
+    <link rel="stylesheet" href="create.css">
+</head>
+<body>
+    <div class="split-container">
+        <section class="brand-panel">
+            <div class="brand-content reveal-stagger">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <path d="M22 6l-10 7L2 6"></path>
+                    </svg>
+                    <span>OpenNote</span>
+                </div>
+                <h1 class="brand-title">The notebook that thinks with you.</h1>
+                <p class="brand-desc">Capture context, connect ideas, and build your personal knowledge base in a distraction-free dark environment.</p>
+                <div class="abstract-grid">
+                    <div class="grid-cell pulse-1"></div>
+                    <div class="grid-cell pulse-2"></div>
+                    <div class="grid-cell pulse-3"></div>
+                    <div class="grid-cell"></div>
+                </div>
+            </div>
+            <div class="brand-footer">
+                <span>&copy; 2026 OpenNote Inc.</span>
+            </div>
+        </section>
+
+        <section class="form-panel">
+            <div class="form-wrapper reveal-slide-up">
+                <header class="form-header">
+                    <h2>Create an account</h2>
+                    <p>Start your journey today.</p>
+                </header>
+
+                <div class="social-login">
+                    <button class="oauth-btn google-btn">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="#EA4335" d="M12 4.8c1.77 0 3.35.61 4.6 1.8L20.2 3C18.06 1.14 15.26 0 12 0 7.31 0 3.25 2.69 1.28 6.61l4.01 3.11C6.27 6.32 8.9 4.8 12 4.8z"/>
+                            <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3l3.86 3.01c2.26-2.08 3.56-5.14 3.56-8.83z"/>
+                            <path fill="#FBBC05" d="M5.29 9.72c-.24.71-.38 1.46-.38 2.28s.14 1.57.38 2.28l-4.01 3.11C.47 15.65 0 13.88 0 12s.47-3.65 1.28-5.39l4.01 3.11z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3.01c-1.08.72-2.45 1.14-4.07 1.14-3.1 0-5.73-2.09-6.67-4.91L1.28 17.39C3.25 21.31 7.31 24 12 24z"/>
+                        </svg>
+                        <span>Continue with Google</span>
+                        <span class="badge">Recommended</span>
+                    </button>
+                    <button class="oauth-btn github-btn">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="divider">
+                    <div class="line"></div>
+                    <span>or sign up with email</span>
+                    <div class="line"></div>
+                </div>
+
+                <form id="register-form" class="dynamic-form">
+                    <div class="form-group floating-label">
+                        <input type="text" id="username" class="form-control" placeholder=" " required autocomplete="off">
+                        <label for="username">Username</label>
+                        <div class="input-indicator">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </div>
+                        <div class="focus-border"></div>
+                    </div>
+
+                    <div class="form-group floating-label">
+                        <input type="email" id="email" class="form-control" placeholder=" " required autocomplete="off">
+                        <label for="email">Email address</label>
+                        <div class="input-indicator">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        </div>
+                        <div class="focus-border"></div>
+                    </div>
+
+                    <div class="form-group floating-label">
+                        <input type="password" id="password" class="form-control" placeholder=" " required>
+                        <label for="password">Password</label>
+                        <div class="input-indicator toggle-password">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </div>
+                        <div class="focus-border"></div>
+                        <div class="password-strength">
+                            <div class="strength-bar"></div>
+                            <span class="strength-text">Use 8+ characters with a mix of letters, numbers & symbols</span>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" id="terms" required>
+                            <span class="checkmark">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </span>
+                            <span class="checkbox-label">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn">
+                            <span class="btn-text">Create Account</span>
+                            <div class="btn-glow"></div>
+                        </button>
+                    </div>
+                </form>
+
+                <footer class="form-footer">
+                    <p>Already have an account? <a href="#" class="switch-link">Sign in here</a></p>
+                </footer>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
