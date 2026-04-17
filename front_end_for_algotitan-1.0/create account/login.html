@@ -214,19 +214,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .badge {
-            position: absolute;
-            top: -10px;
-            right: -5px;
-            background: var(--text-main);
-            color: var(--bg-base);
-            font-size: 0.65rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
         /* --- 8. DIVIDER LOGIC --- */
         .divider {
             display: flex;
@@ -530,7 +517,6 @@
 
         @media (max-width: 480px) {
             .social-login { flex-direction: column; }
-            .badge { top: 12px; right: 12px; }
             .form-utilities { flex-direction: column; align-items: flex-start; gap: 1rem; }
         }
     </style>
@@ -580,7 +566,6 @@
                             <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3.01c-1.08.72-2.45 1.14-4.07 1.14-3.1 0-5.73-2.09-6.67-4.91L1.28 17.39C3.25 21.31 7.31 24 12 24z"/>
                         </svg>
                         <span>Google</span>
-                        <span class="badge">Last Used</span>
                     </button>
                     
                     <button type="button" class="oauth-btn github-btn">
@@ -611,7 +596,7 @@
                     <div class="form-group floating-label">
                         <input type="password" id="password" class="form-control" placeholder=" " required autocomplete="current-password">
                         <label for="password">Password</label>
-                        <div class="input-indicator toggle-password">
+                        <div class="input-indicator toggle-password" id="toggleIcon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </div>
                         <div class="focus-border"></div>
@@ -645,5 +630,18 @@
             </div>
         </section>
     </div>
+
+    <script>
+        const toggleIcon = document.getElementById('toggleIcon');
+        const passwordInput = document.getElementById('password');
+
+        if(toggleIcon && passwordInput) {
+            toggleIcon.addEventListener('click', function () {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.style.opacity = type === 'password' ? '1' : '0.5';
+            });
+        }
+    </script>
 </body>
 </html>

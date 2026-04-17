@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenNote | Error</title>
+    <style>
+        /* --- CSS VARIABLES & THEME CONFIGURATION --- */
+        :root {
+            --bg-base: #050505;
+            --bg-panel: #1a1a1a;
+            --bg-hover: #2a2a2a;
+            --text-main: #f0f0f0;
+            --text-muted: #a0a0a0;
+            --text-dark: #555555;
+            
+            /* Error Specific Colors matching the image */
+            --error-red: #ff6b6b;
+            --btn-green: #42a574;
+            --btn-green-hover: #368a60;
+            --btn-gray: #3a3a3a;
+            --btn-gray-hover: #4a4a4a;
+            
+            --border-color: #333333;
+            
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-serif: 'Georgia', serif;
+            
+            --radius-sm: 8px;
+            --transition-fast: 0.2s ease;
+            --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* --- RESETS --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SPLIT LAYOUT --- */
+        .split-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* --- LEFT PANEL: BRANDING --- */
+        .brand-panel {
+            flex: 1.1;
+            background: radial-gradient(circle at top left, #111111 0%, #000000 100%);
+            padding: 4rem 5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-content {
+            max-width: 500px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-title {
+            font-family: var(--font-serif);
+            font-size: 3.5rem;
+            line-height: 1.1;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .brand-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        .brand-footer {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+            z-index: 2;
+        }
+
+        /* Abstract CSS Art */
+        .abstract-visual {
+            position: absolute;
+            top: 50%;
+            right: -20%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: 400px;
+            opacity: 0.05;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ffffff;
+            border-radius: 50%;
+        }
+
+        .c-1 { width: 100px; height: 100px; animation: pulseRing 3s infinite alternate; }
+        .c-2 { width: 200px; height: 200px; animation: pulseRing 4s infinite alternate-reverse; }
+        .c-3 { width: 300px; height: 300px; animation: pulseRing 5s infinite alternate; }
+        .c-4 { width: 400px; height: 400px; animation: pulseRing 6s infinite alternate-reverse; }
+
+        @keyframes pulseRing {
+            0% { border-color: rgba(255,255,255,0.1); transform: translate(-50%, -50%) scale(0.95); }
+            100% { border-color: rgba(255,255,255,0.8); transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        /* --- RIGHT PANEL: ERROR STATE --- */
+        .form-panel {
+            flex: 0.9;
+            background-color: var(--bg-panel);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .error-wrapper {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* Error Shake Animation */
+        .error-shake {
+            animation: headshake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+        }
+
+        @keyframes headshake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        /* Error Content Styling */
+        .exclamation {
+            color: var(--error-red);
+            font-size: 5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+
+        .error-title {
+            color: var(--error-red);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .error-desc {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            padding: 0 10px;
+        }
+
+        /* Button Group */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition-fast);
+            color: #ffffff;
+        }
+
+        .btn-return {
+            background-color: var(--btn-gray);
+        }
+
+        .btn-return:hover {
+            background-color: var(--btn-gray-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-create {
+            background-color: var(--btn-green);
+        }
+
+        .btn-create:hover {
+            background-color: var(--btn-green-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(66, 165, 116, 0.2);
+        }
+
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 1024px) {
+            .brand-title { font-size: 2.8rem; }
+            .brand-panel { padding: 3rem; }
+        }
+
+        @media (max-width: 768px) {
+            .split-container { flex-direction: column; height: auto; min-height: 100vh; }
+            .brand-panel { padding: 4rem 2rem; border-right: none; border-bottom: 1px solid var(--border-color); text-align: center; align-items: center; flex: none; }
+            .brand-content { max-width: 100%; }
+            .logo { justify-content: center; margin-bottom: 2rem; }
+            .abstract-visual, .brand-footer { display: none; }
+            .form-panel { padding: 4rem 2rem; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-container">
+        <section class="brand-panel">
+            <div class="brand-content">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <path d="M22 6l-10 7L2 6"></path>
+                    </svg>
+                    <span>OpenNote</span>
+                </div>
+                <h1 class="brand-title">Authentication sequence interrupted.</h1>
+                <p class="brand-desc">We hit a roadblock finding your workspace. Verify your details or initiate a new node in the network.</p>
+                <div class="abstract-visual">
+                    <div class="circle c-1"></div>
+                    <div class="circle c-2"></div>
+                    <div class="circle c-3"></div>
+                    <div class="circle c-4"></div>
+                </div>
+            </div>
+            <div class="brand-footer">
+                <span>&copy; 2026 OpenNote Inc. | Status: Exception Handled</span>
+            </div>
+        </section>
+
+        <section class="form-panel">
+            <div class="error-wrapper error-shake">
+                
+                <div class="exclamation">!</div>
+                <h2 class="error-title">Some Error Occurred</h2>
+                
+                <p class="error-desc">
+                    The user does not exist. Please create an account to continue.
+                </p>
+
+                <div class="button-group">
+                    <button class="btn btn-return">Return to Login</button>
+                    <button class="btn btn-create">Create Account</button>
+                </div>
+
+            </div>
+        </section>
+    </div>
+</body>
+</html>

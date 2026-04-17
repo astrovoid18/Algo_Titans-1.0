@@ -200,19 +200,6 @@
             transform: translateY(-1px);
         }
 
-        .badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: var(--text-main);
-            color: var(--bg-base);
-            font-size: 0.65rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
         /* --- DIVIDER --- */
         .divider {
             display: flex;
@@ -251,7 +238,6 @@
             transition: border-color var(--transition-fast);
         }
 
-        /* FIXED: Set absolute top to 24px instead of 50% to ignore strength bar height */
         .form-group label {
             position: absolute;
             left: 16px;
@@ -277,7 +263,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* FIXED: Set absolute top to 24px instead of 50% */
         .input-indicator {
             position: absolute;
             right: 16px;
@@ -300,7 +285,7 @@
 
         .focus-border {
             position: absolute;
-            bottom: 0; /* Align to the bottom of the input container */
+            bottom: 0;
             left: 50%;
             width: 0;
             height: 1px;
@@ -503,7 +488,6 @@
 
         @media (max-width: 480px) {
             .social-login { flex-direction: column; }
-            .badge { top: 12px; right: 12px; }
         }
     </style>
 </head>
@@ -548,7 +532,6 @@
                             <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3.01c-1.08.72-2.45 1.14-4.07 1.14-3.1 0-5.73-2.09-6.67-4.91L1.28 17.39C3.25 21.31 7.31 24 12 24z"/>
                         </svg>
                         <span>Continue with Google</span>
-                        <span class="badge">Recommended</span>
                     </button>
                     <button class="oauth-btn github-btn">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">

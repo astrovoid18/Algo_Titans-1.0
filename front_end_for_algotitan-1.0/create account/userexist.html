@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Exists</title>
+    <style>
+        body {
+            background-color: #212121;
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 380px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        p {
+            color: #9e9e9e;
+            font-size: 1rem;
+            margin-bottom: 35px;
+        }
+
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50; /* Softer green */
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-link {
+            background: transparent;
+            color: #9e9e9e;
+            font-size: 0.9rem;
+        }
+
+        .btn-link:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>User already exists</h1>
+        <p>It looks like you've been here before. Please sign in to access your account.</p>
+
+        <div class="btn-container">
+            <a href="/login" class="btn btn-primary">Go to Login</a>
+            <a href="/reset-password" class="btn btn-link">Need help signing in?</a>
+        </div>
+    </div>
+
+</body>
+</html>
