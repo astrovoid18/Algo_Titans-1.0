@@ -4,7 +4,536 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenNote | Log In</title>
-    <link rel="stylesheet" href="login.css">
+    <style>
+        /* ==========================================================================
+           OPENNOTE: DARK MINIMALIST LOGIN THEME
+           ========================================================================== */
+
+        /* --- 1. CSS VARIABLES & SYSTEM CONFIG --- */
+        :root {
+            --bg-base: #050505;
+            --bg-panel: #0a0a0a;
+            --bg-input: #121212;
+            --bg-hover: #1a1a1a;
+            
+            --text-main: #f0f0f0;
+            --text-muted: #888888;
+            --text-dark: #444444;
+            
+            --accent-glow: #ffffff;
+            --border-color: #222222;
+            --border-focus: #555555;
+            
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-serif: 'Georgia', serif;
+            
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --transition-fast: 0.2s ease-out;
+            --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* --- 2. RESETS & NORMALIZE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        a {
+            color: var(--text-main);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        /* --- 3. ARCHITECTURE: SPLIT LAYOUT --- */
+        .split-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* --- 4. BRAND PANEL (LEFT SIDE) --- */
+        .brand-panel {
+            flex: 1.1;
+            background: radial-gradient(circle at top left, #151515 0%, #000000 100%);
+            padding: 4rem 5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-content {
+            max-width: 500px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-title {
+            font-family: var(--font-serif);
+            font-size: 3.5rem;
+            line-height: 1.1;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .brand-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        .brand-footer {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+            z-index: 2;
+        }
+
+        /* --- 5. ABSTRACT CSS ART: PULSING CIRCLES --- */
+        .abstract-visual {
+            position: absolute;
+            top: 50%;
+            right: -20%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: 400px;
+            opacity: 0.05;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ffffff;
+            border-radius: 50%;
+        }
+
+        .c-1 { width: 100px; height: 100px; animation: pulseRing 3s infinite alternate; }
+        .c-2 { width: 200px; height: 200px; animation: pulseRing 4s infinite alternate-reverse; }
+        .c-3 { width: 300px; height: 300px; animation: pulseRing 5s infinite alternate; }
+        .c-4 { width: 400px; height: 400px; animation: pulseRing 6s infinite alternate-reverse; }
+
+        @keyframes pulseRing {
+            0% { border-color: rgba(255,255,255,0.1); transform: translate(-50%, -50%) scale(0.95); }
+            100% { border-color: rgba(255,255,255,0.8); transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        /* --- 6. FORM PANEL (RIGHT SIDE) --- */
+        .form-panel {
+            flex: 0.9;
+            background-color: var(--bg-panel);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .form-wrapper {
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .form-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .form-header h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .form-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* --- 7. SINGLE SIGN-ON BUTTONS --- */
+        .social-login {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .oauth-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            position: relative;
+            flex: 1;
+        }
+
+        .oauth-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-focus);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .badge {
+            position: absolute;
+            top: -10px;
+            right: -5px;
+            background: var(--text-main);
+            color: var(--bg-base);
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* --- 8. DIVIDER LOGIC --- */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .divider .line {
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .divider span {
+            color: var(--text-dark);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- 9. INPUT FIELDS & FLOATING LABELS --- */
+        .form-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 20px 16px 10px 16px;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color var(--transition-fast), background var(--transition-fast);
+        }
+
+        .form-control:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset;
+            -webkit-text-fill-color: var(--text-main);
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .form-group label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+            pointer-events: none;
+            transition: all var(--transition-fast);
+        }
+
+        .form-control:focus,
+        .form-control:not(:placeholder-shown) {
+            border-color: var(--border-focus);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .form-control:focus + label,
+        .form-control:not(:placeholder-shown) + label {
+            top: 12px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-indicator {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password {
+            cursor: pointer;
+            transition: color var(--transition-fast);
+        }
+
+        .toggle-password:hover {
+            color: var(--text-main);
+        }
+
+        .focus-border {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 1px;
+            background: var(--text-main);
+            transition: all var(--transition-smooth);
+            transform: translateX(-50%);
+        }
+
+        .form-control:focus ~ .focus-border {
+            width: 100%;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- 10. UTILITIES (CHECKBOX & FORGOT PASSWORD) --- */
+        .form-utilities {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1.5rem 0 2rem 0;
+        }
+
+        .custom-checkbox {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            min-width: 18px;
+            height: 18px;
+            background: transparent;
+            border: 1px solid var(--text-dark);
+            border-radius: 4px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .checkmark svg {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all var(--transition-fast);
+        }
+
+        .custom-checkbox:hover .checkmark {
+            border-color: var(--text-muted);
+        }
+
+        .custom-checkbox input:checked ~ .checkmark {
+            background: var(--text-main);
+            border-color: var(--text-main);
+            color: var(--bg-base);
+        }
+
+        .custom-checkbox input:checked ~ .checkmark svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .checkbox-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .forgot-link {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            color: var(--text-main);
+            text-decoration: underline;
+        }
+
+        /* --- 11. SUBMIT BUTTON --- */
+        .submit-btn {
+            width: 100%;
+            background: var(--text-main);
+            color: var(--bg-base);
+            border: none;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform var(--transition-fast);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255,255,255,0.1);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.6s ease;
+            pointer-events: none;
+        }
+
+        .submit-btn:hover .btn-glow {
+            opacity: 0.15;
+            transform: scale(1);
+        }
+
+        /* --- 12. FOOTER --- */
+        .form-footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .switch-link {
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--text-dark);
+            padding-bottom: 2px;
+        }
+
+        .switch-link:hover {
+            border-bottom-color: var(--text-main);
+            text-decoration: none;
+        }
+
+        /* --- 13. ENTRANCE ANIMATIONS --- */
+        .reveal-stagger > * {
+            opacity: 0;
+            animation: fadeSlideRight 0.8s var(--transition-smooth) forwards;
+        }
+
+        .reveal-stagger > *:nth-child(1) { animation-delay: 0.1s; }
+        .reveal-stagger > *:nth-child(2) { animation-delay: 0.2s; }
+        .reveal-stagger > *:nth-child(3) { animation-delay: 0.3s; }
+
+        .reveal-slide-up {
+            opacity: 0;
+            animation: fadeSlideUp 0.8s var(--transition-smooth) forwards;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes fadeSlideRight {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 14. RESPONSIVE DESIGN FOR TABLETS & MOBILE --- */
+        @media (max-width: 1024px) {
+            .brand-title { font-size: 2.8rem; }
+            .brand-panel { padding: 3rem; }
+        }
+
+        @media (max-width: 768px) {
+            .split-container {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .brand-panel {
+                flex: none;
+                padding: 4rem 2rem;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                text-align: center;
+                align-items: center;
+            }
+            
+            .brand-content { max-width: 100%; }
+            .logo { justify-content: center; margin-bottom: 2rem; }
+            .abstract-visual { display: none; }
+            .brand-footer { display: none; }
+            
+            .form-panel {
+                padding: 4rem 2rem;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .social-login { flex-direction: column; }
+            .badge { top: 12px; right: 12px; }
+            .form-utilities { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        }
+    </style>
 </head>
 <body>
     <div class="split-container">
