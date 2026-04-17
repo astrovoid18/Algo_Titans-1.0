@@ -5,42 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenNote | Create Account</title>
     <style>
-        /* ==========================================================================
-           OPENNOTE: DARK MINIMALIST SPLIT-PANE AUTHENTICATION
-           ========================================================================== */
-
         /* --- CSS VARIABLES & THEME CONFIGURATION --- */
         :root {
             --bg-base: #050505;
             --bg-panel: #0a0a0a;
             --bg-input: #121212;
             --bg-hover: #1a1a1a;
-            
             --text-main: #f0f0f0;
             --text-muted: #888888;
             --text-dark: #444444;
-            
             --accent-glow: #e0e0e0;
             --accent-success: #28a745;
             --border-color: #222222;
             --border-focus: #444444;
-            
             --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --font-serif: 'Georgia', serif;
-            
             --radius-sm: 6px;
-            --radius-md: 12px;
             --transition-fast: 0.2s ease;
             --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* --- RESETS & BASE TYPOGRAPHY --- */
+        /* --- RESETS --- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
@@ -63,14 +53,14 @@
             text-decoration: underline;
         }
 
-        /* --- MAIN SPLIT LAYOUT --- */
+        /* --- SPLIT LAYOUT --- */
         .split-container {
             display: flex;
             width: 100%;
             height: 100vh;
         }
 
-        /* --- LEFT PANEL: BRANDING --- */
+        /* --- LEFT PANEL --- */
         .brand-panel {
             flex: 1;
             background: radial-gradient(circle at top left, #111111 0%, #000000 100%);
@@ -95,14 +85,12 @@
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 4rem;
-            letter-spacing: -0.5px;
         }
 
         .brand-title {
             font-family: var(--font-serif);
             font-size: 3rem;
             line-height: 1.1;
-            font-weight: 400;
             margin-bottom: 1.5rem;
             color: #ffffff;
         }
@@ -110,10 +98,9 @@
         .brand-desc {
             font-size: 1.1rem;
             color: var(--text-muted);
-            line-height: 1.6;
         }
 
-        /* Abstract CSS Art Background */
+        /* Abstract CSS Art */
         .abstract-grid {
             position: absolute;
             top: 50%;
@@ -149,7 +136,7 @@
             z-index: 2;
         }
 
-        /* --- RIGHT PANEL: FORM --- */
+        /* --- RIGHT PANEL --- */
         .form-panel {
             flex: 1;
             background-color: var(--bg-panel);
@@ -173,7 +160,6 @@
             font-size: 1.75rem;
             font-weight: 500;
             margin-bottom: 0.5rem;
-            letter-spacing: -0.5px;
         }
 
         .form-header p {
@@ -245,10 +231,9 @@
             color: var(--text-dark);
             font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        /* --- DYNAMIC FORM FIELDS (FLOATING LABELS) --- */
+        /* --- FORM FIELDS & FIXES --- */
         .form-group {
             position: relative;
             margin-bottom: 1.5rem;
@@ -266,10 +251,11 @@
             transition: border-color var(--transition-fast);
         }
 
+        /* FIXED: Set absolute top to 24px instead of 50% to ignore strength bar height */
         .form-group label {
             position: absolute;
             left: 16px;
-            top: 50%;
+            top: 24px;
             transform: translateY(-50%);
             color: var(--text-muted);
             font-size: 1rem;
@@ -277,7 +263,6 @@
             transition: all var(--transition-fast);
         }
 
-        /* Floating Label Logic */
         .form-control:focus,
         .form-control:not(:placeholder-shown) {
             border-color: var(--border-focus);
@@ -292,11 +277,11 @@
             letter-spacing: 0.5px;
         }
 
-        /* Icon Indicators */
+        /* FIXED: Set absolute top to 24px instead of 50% */
         .input-indicator {
             position: absolute;
             right: 16px;
-            top: 50%;
+            top: 24px; 
             transform: translateY(-50%);
             color: var(--text-dark);
             display: flex;
@@ -306,16 +291,16 @@
         .toggle-password {
             cursor: pointer;
             transition: color var(--transition-fast);
+            z-index: 10;
         }
 
         .toggle-password:hover {
             color: var(--text-main);
         }
 
-        /* Focus Border Animation */
         .focus-border {
             position: absolute;
-            bottom: 0;
+            bottom: 0; /* Align to the bottom of the input container */
             left: 50%;
             width: 0;
             height: 1px;
@@ -350,12 +335,13 @@
             left: 0;
             top: 0;
             height: 100%;
-            width: 25%; /* Simulated strength */
+            width: 25%;
             background: var(--text-dark);
             transition: all var(--transition-smooth);
         }
 
-        .form-control[type="password"]:focus ~ .password-strength .strength-bar::after {
+        .form-control[type="password"]:focus ~ .password-strength .strength-bar::after,
+        .form-control[type="text"]:focus ~ .password-strength .strength-bar::after {
             width: 65%;
             background: var(--accent-success);
         }
@@ -365,7 +351,7 @@
             color: var(--text-dark);
         }
 
-        /* --- CUSTOM CHECKBOX --- */
+        /* --- CHECKBOX --- */
         .form-options {
             margin: 1.5rem 0 2rem 0;
         }
@@ -422,10 +408,9 @@
         .checkbox-label {
             font-size: 0.85rem;
             color: var(--text-muted);
-            line-height: 1.4;
         }
 
-        /* --- SUBMIT BUTTON (DYNAMIC LIFT & GLOW) --- */
+        /* --- SUBMIT BUTTON --- */
         .submit-btn {
             width: 100%;
             background: var(--text-main);
@@ -443,10 +428,6 @@
 
         .submit-btn:hover {
             transform: translateY(-2px);
-        }
-
-        .submit-btn:active {
-            transform: translateY(0);
         }
 
         .btn-glow {
@@ -467,7 +448,6 @@
             transform: scale(1);
         }
 
-        /* --- FOOTER & LINKS --- */
         .form-footer {
             margin-top: 2rem;
             text-align: center;
@@ -482,12 +462,7 @@
             padding-bottom: 2px;
         }
 
-        .switch-link:hover {
-            border-bottom-color: var(--text-main);
-            text-decoration: none;
-        }
-
-        /* --- ENTRANCE ANIMATIONS --- */
+        /* --- ANIMATIONS & MEDIA QUERIES --- */
         .reveal-stagger > * {
             opacity: 0;
             animation: fadeSlideRight 0.8s var(--transition-smooth) forwards;
@@ -513,36 +488,17 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- RESPONSIVE MEDIA QUERIES --- */
         @media (max-width: 992px) {
             .brand-title { font-size: 2.2rem; }
             .brand-panel { padding: 2.5rem; }
         }
 
         @media (max-width: 768px) {
-            .split-container {
-                flex-direction: column;
-                height: auto;
-                min-height: 100vh;
-            }
-            
-            .brand-panel {
-                flex: none;
-                padding: 3rem 2rem;
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-                text-align: center;
-                align-items: center;
-            }
-            
+            .split-container { flex-direction: column; height: auto; min-height: 100vh; }
+            .brand-panel { padding: 3rem 2rem; border-right: none; border-bottom: 1px solid var(--border-color); text-align: center; align-items: center; flex: none; }
             .logo { justify-content: center; margin-bottom: 2rem; }
-            .abstract-grid { display: none; }
-            .brand-footer { display: none; }
-            
-            .form-panel {
-                padding: 3rem 2rem;
-                align-items: flex-start;
-            }
+            .abstract-grid, .brand-footer { display: none; }
+            .form-panel { padding: 3rem 2rem; align-items: flex-start; }
         }
 
         @media (max-width: 480px) {
@@ -614,7 +570,7 @@
                         <div class="input-indicator">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </div>
-                        <div class="focus-border"></div>
+                        <div class="focus-border" style="bottom: 0;"></div>
                     </div>
 
                     <div class="form-group floating-label">
@@ -623,16 +579,19 @@
                         <div class="input-indicator">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                         </div>
-                        <div class="focus-border"></div>
+                        <div class="focus-border" style="bottom: 0;"></div>
                     </div>
 
                     <div class="form-group floating-label">
                         <input type="password" id="password" class="form-control" placeholder=" " required>
                         <label for="password">Password</label>
-                        <div class="input-indicator toggle-password">
+                        
+                        <div class="input-indicator toggle-password" id="toggleIcon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </div>
-                        <div class="focus-border"></div>
+                        
+                        <div class="focus-border" style="bottom: 25px;"></div>
+                        
                         <div class="password-strength">
                             <div class="strength-bar"></div>
                             <span class="strength-text">Use 8+ characters with a mix of letters, numbers & symbols</span>
@@ -663,5 +622,19 @@
             </div>
         </section>
     </div>
+
+    <script>
+        const toggleIcon = document.getElementById('toggleIcon');
+        const passwordInput = document.getElementById('password');
+
+        toggleIcon.addEventListener('click', function () {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle opacity to indicate state change
+            this.style.opacity = type === 'password' ? '1' : '0.5';
+        });
+    </script>
 </body>
 </html>
