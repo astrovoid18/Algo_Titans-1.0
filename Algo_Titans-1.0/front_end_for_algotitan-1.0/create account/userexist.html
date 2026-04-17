@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenNote | User Exists</title>
+    <style>
+        /* ==========================================================================
+           OPENNOTE: USER EXISTS STATE (SYNCED THEME)
+           ========================================================================== */
+
+        /* --- 1. CSS VARIABLES & SYSTEM CONFIG --- */
+        :root {
+            --bg-base: #050505;
+            --bg-panel: #0a0a0a; /* Reverted to full dark to match previous theme */
+            --bg-input: #121212;
+            --bg-hover: #1a1a1a;
+            
+            --text-main: #f0f0f0;
+            --text-muted: #888888;
+            --text-dark: #444444;
+            
+            --border-color: #222222;
+            
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-serif: 'Georgia', serif;
+            
+            --radius-sm: 6px;
+            --transition-fast: 0.2s ease-out;
+            --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* --- 2. RESETS --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        /* --- 3. SPLIT LAYOUT --- */
+        .split-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* --- 4. LEFT PANEL: BRANDING --- */
+        .brand-panel {
+            flex: 1.1;
+            background: radial-gradient(circle at top left, #151515 0%, #000000 100%);
+            padding: 4rem 5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-content {
+            max-width: 500px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-title {
+            font-family: var(--font-serif);
+            font-size: 3.5rem;
+            line-height: 1.1;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .brand-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        .brand-footer {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+            z-index: 2;
+        }
+
+        /* Abstract CSS Art */
+        .abstract-visual {
+            position: absolute;
+            top: 50%;
+            right: -20%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: 400px;
+            opacity: 0.05;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ffffff;
+            border-radius: 50%;
+        }
+
+        .c-1 { width: 100px; height: 100px; animation: pulseRing 3s infinite alternate; }
+        .c-2 { width: 200px; height: 200px; animation: pulseRing 4s infinite alternate-reverse; }
+        .c-3 { width: 300px; height: 300px; animation: pulseRing 5s infinite alternate; }
+        .c-4 { width: 400px; height: 400px; animation: pulseRing 6s infinite alternate-reverse; }
+
+        @keyframes pulseRing {
+            0% { border-color: rgba(255,255,255,0.1); transform: translate(-50%, -50%) scale(0.95); }
+            100% { border-color: rgba(255,255,255,0.8); transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        /* --- 5. RIGHT PANEL: STATE INFO --- */
+        .form-panel {
+            flex: 0.9;
+            background-color: var(--bg-panel);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .state-wrapper {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .state-title {
+            color: var(--text-main);
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            letter-spacing: -0.5px;
+        }
+
+        .state-desc {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            padding: 0 10px;
+        }
+
+        /* --- 6. PRIMARY BUTTON (SYNCED WITH MAIN THEME) --- */
+        .submit-btn {
+            width: 100%;
+            background: var(--text-main);
+            color: var(--bg-base);
+            border: none;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform var(--transition-fast);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255,255,255,0.1);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.6s ease;
+            pointer-events: none;
+        }
+
+        .submit-btn:hover .btn-glow {
+            opacity: 0.15;
+            transform: scale(1);
+        }
+
+        /* --- 7. FOOTER LINK --- */
+        .state-footer {
+            margin-top: 2rem;
+        }
+
+        .help-link {
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 1px solid transparent;
+            padding-bottom: 2px;
+            transition: all var(--transition-fast);
+        }
+
+        .help-link:hover {
+            color: var(--text-main);
+            border-bottom-color: var(--text-main);
+        }
+
+        /* --- 8. ANIMATION --- */
+        .reveal-slide-up {
+            opacity: 0;
+            animation: fadeSlideUp 0.8s var(--transition-smooth) forwards;
+            animation-delay: 0.1s;
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 9. RESPONSIVE DESIGN --- */
+        @media (max-width: 1024px) {
+            .brand-title { font-size: 2.8rem; }
+            .brand-panel { padding: 3rem; }
+        }
+
+        @media (max-width: 768px) {
+            .split-container { flex-direction: column; height: auto; min-height: 100vh; }
+            .brand-panel { padding: 4rem 2rem; border-right: none; border-bottom: 1px solid var(--border-color); text-align: center; align-items: center; flex: none; }
+            .brand-content { max-width: 100%; }
+            .logo { justify-content: center; margin-bottom: 2rem; }
+            .abstract-visual, .brand-footer { display: none; }
+            .form-panel { padding: 4rem 2rem; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-container">
+        <section class="brand-panel">
+            <div class="brand-content">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <path d="M22 6l-10 7L2 6"></path>
+                    </svg>
+                    <span>OpenNote</span>
+                </div>
+                <h1 class="brand-title">Welcome back to the network.</h1>
+                <p class="brand-desc">Your credentials correspond to an active node. Proceed to authentication to access your workspace.</p>
+                <div class="abstract-visual">
+                    <div class="circle c-1"></div>
+                    <div class="circle c-2"></div>
+                    <div class="circle c-3"></div>
+                    <div class="circle c-4"></div>
+                </div>
+            </div>
+            <div class="brand-footer">
+                <span>&copy; 2026 OpenNote Inc. | Status: Active Record Found</span>
+            </div>
+        </section>
+
+        <section class="form-panel">
+            <div class="state-wrapper reveal-slide-up">
+                
+                <h2 class="state-title">User already exists</h2>
+                
+                <p class="state-desc">
+                    It looks like you've been here before. Please sign in to access your account.
+                </p>
+
+                <button class="submit-btn">
+                    <span class="btn-text">Go to Login</span>
+                    <div class="btn-glow"></div>
+                </button>
+
+                <div class="state-footer">
+                    <a href="#" class="help-link">Need help signing in?</a>
+                </div>
+
+            </div>
+        </section>
+    </div>
+</body>
+</html>
