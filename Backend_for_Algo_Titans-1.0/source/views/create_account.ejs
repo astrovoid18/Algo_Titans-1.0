@@ -1,45 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenNote | Log In</title>
+    <title>OpenNote | Create Account</title>
     <style>
-        /* ==========================================================================
-           OPENNOTE: DARK MINIMALIST LOGIN THEME
-           ========================================================================== */
-
-        /* --- 1. CSS VARIABLES & SYSTEM CONFIG --- */
+        /* --- CSS VARIABLES & THEME CONFIGURATION --- */
         :root {
             --bg-base: #050505;
             --bg-panel: #0a0a0a;
             --bg-input: #121212;
             --bg-hover: #1a1a1a;
-            
             --text-main: #f0f0f0;
             --text-muted: #888888;
             --text-dark: #444444;
-            
-            --accent-glow: #ffffff;
+            --accent-glow: #e0e0e0;
+            --accent-success: #28a745;
             --border-color: #222222;
-            --border-focus: #555555;
-            
+            --border-focus: #444444;
             --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --font-serif: 'Georgia', serif;
-            
             --radius-sm: 6px;
-            --radius-md: 12px;
-            --transition-fast: 0.2s ease-out;
+            --transition-fast: 0.2s ease;
             --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* --- 2. RESETS & NORMALIZE --- */
+        /* --- RESETS --- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
@@ -49,9 +41,6 @@
             line-height: 1.5;
             height: 100vh;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         a {
@@ -60,18 +49,23 @@
             transition: color var(--transition-fast);
         }
 
-        /* --- 3. ARCHITECTURE: SPLIT LAYOUT --- */
+        a:hover {
+            color: var(--accent-glow);
+            text-decoration: underline;
+        }
+
+        /* --- SPLIT LAYOUT --- */
         .split-container {
             display: flex;
             width: 100%;
             height: 100vh;
         }
 
-        /* --- 4. BRAND PANEL (LEFT SIDE) --- */
+        /* --- LEFT PANEL --- */
         .brand-panel {
-            flex: 1.1;
-            background: radial-gradient(circle at top left, #151515 0%, #000000 100%);
-            padding: 4rem 5rem;
+            flex: 1;
+            background: radial-gradient(circle at top left, #111111 0%, #000000 100%);
+            padding: 4rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -81,9 +75,8 @@
         }
 
         .brand-content {
-            max-width: 500px;
+            max-width: 480px;
             z-index: 2;
-            position: relative;
         }
 
         .logo {
@@ -92,15 +85,13 @@
             gap: 12px;
             font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 5rem;
-            letter-spacing: -0.5px;
+            margin-bottom: 4rem;
         }
 
         .brand-title {
             font-family: var(--font-serif);
-            font-size: 3.5rem;
+            font-size: 3rem;
             line-height: 1.1;
-            font-weight: 400;
             margin-bottom: 1.5rem;
             color: #ffffff;
         }
@@ -108,8 +99,51 @@
         .brand-desc {
             font-size: 1.1rem;
             color: var(--text-muted);
-            line-height: 1.6;
-            max-width: 90%;
+        }
+
+        /* Abstract CSS Art */
+        .abstract-grid {
+            position: absolute;
+            top: 50%;
+            right: -10%;
+            transform: translateY(-50%);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            opacity: 0.05;
+            z-index: 1;
+        }
+
+        .grid-cell {
+            width: 200px;
+            height: 200px;
+            border: 1px solid #ffffff;
+            border-radius: 20px;
+            transform: rotate(45deg);
+        }
+
+        .pulse-1 {
+            animation: pulseBorder 4s infinite alternate;
+        }
+
+        .pulse-2 {
+            animation: pulseBorder 5s infinite alternate-reverse;
+        }
+
+        .pulse-3 {
+            animation: pulseBorder 6s infinite alternate;
+        }
+
+        @keyframes pulseBorder {
+            0% {
+                border-color: rgba(255, 255, 255, 0.1);
+                transform: rotate(45deg) scale(0.95);
+            }
+
+            100% {
+                border-color: rgba(255, 255, 255, 0.8);
+                transform: rotate(45deg) scale(1.05);
+            }
         }
 
         .brand-footer {
@@ -118,41 +152,9 @@
             z-index: 2;
         }
 
-        /* --- 5. ABSTRACT CSS ART: PULSING CIRCLES --- */
-        .abstract-visual {
-            position: absolute;
-            top: 50%;
-            right: -20%;
-            transform: translateY(-50%);
-            width: 400px;
-            height: 400px;
-            opacity: 0.05;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .circle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border: 1px solid #ffffff;
-            border-radius: 50%;
-        }
-
-        .c-1 { width: 100px; height: 100px; animation: pulseRing 3s infinite alternate; }
-        .c-2 { width: 200px; height: 200px; animation: pulseRing 4s infinite alternate-reverse; }
-        .c-3 { width: 300px; height: 300px; animation: pulseRing 5s infinite alternate; }
-        .c-4 { width: 400px; height: 400px; animation: pulseRing 6s infinite alternate-reverse; }
-
-        @keyframes pulseRing {
-            0% { border-color: rgba(255,255,255,0.1); transform: translate(-50%, -50%) scale(0.95); }
-            100% { border-color: rgba(255,255,255,0.8); transform: translate(-50%, -50%) scale(1.05); }
-        }
-
-        /* --- 6. FORM PANEL (RIGHT SIDE) --- */
+        /* --- RIGHT PANEL --- */
         .form-panel {
-            flex: 0.9;
+            flex: 1;
             background-color: var(--bg-panel);
             display: flex;
             align-items: center;
@@ -163,7 +165,7 @@
 
         .form-wrapper {
             width: 100%;
-            max-width: 380px;
+            max-width: 400px;
         }
 
         .form-header {
@@ -171,10 +173,9 @@
         }
 
         .form-header h2 {
-            font-size: 1.8rem;
-            font-weight: 600;
+            font-size: 1.75rem;
+            font-weight: 500;
             margin-bottom: 0.5rem;
-            letter-spacing: -0.5px;
         }
 
         .form-header p {
@@ -182,7 +183,7 @@
             font-size: 0.95rem;
         }
 
-        /* --- 7. SINGLE SIGN-ON BUTTONS --- */
+        /* --- OAUTH BUTTONS --- */
         .social-login {
             display: flex;
             gap: 12px;
@@ -204,17 +205,23 @@
             font-weight: 500;
             transition: all var(--transition-fast);
             position: relative;
+        }
+
+        .google-btn {
+            flex: 3;
+        }
+
+        .github-btn {
             flex: 1;
         }
 
         .oauth-btn:hover {
             background: var(--bg-hover);
             border-color: var(--border-focus);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateY(-1px);
         }
 
-        /* --- 8. DIVIDER LOGIC --- */
+        /* --- DIVIDER --- */
         .divider {
             display: flex;
             align-items: center;
@@ -230,12 +237,11 @@
 
         .divider span {
             color: var(--text-dark);
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        /* --- 9. INPUT FIELDS & FLOATING LABELS --- */
+        /* --- FORM FIELDS & FIXES --- */
         .form-group {
             position: relative;
             margin-bottom: 1.5rem;
@@ -246,23 +252,17 @@
             background: transparent;
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
-            padding: 20px 16px 10px 16px;
+            padding: 18px 16px 10px 16px;
             color: var(--text-main);
             font-size: 1rem;
             outline: none;
-            transition: border-color var(--transition-fast), background var(--transition-fast);
-        }
-
-        .form-control:-webkit-autofill {
-            -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset;
-            -webkit-text-fill-color: var(--text-main);
-            transition: background-color 5000s ease-in-out 0s;
+            transition: border-color var(--transition-fast);
         }
 
         .form-group label {
             position: absolute;
             left: 16px;
-            top: 50%;
+            top: 24px;
             transform: translateY(-50%);
             color: var(--text-muted);
             font-size: 1rem;
@@ -273,11 +273,10 @@
         .form-control:focus,
         .form-control:not(:placeholder-shown) {
             border-color: var(--border-focus);
-            background: rgba(255,255,255,0.02);
         }
 
-        .form-control:focus + label,
-        .form-control:not(:placeholder-shown) + label {
+        .form-control:focus+label,
+        .form-control:not(:placeholder-shown)+label {
             top: 12px;
             font-size: 0.7rem;
             color: var(--text-muted);
@@ -288,7 +287,7 @@
         .input-indicator {
             position: absolute;
             right: 16px;
-            top: 50%;
+            top: 24px;
             transform: translateY(-50%);
             color: var(--text-dark);
             display: flex;
@@ -298,6 +297,7 @@
         .toggle-password {
             cursor: pointer;
             transition: color var(--transition-fast);
+            z-index: 10;
         }
 
         .toggle-password:hover {
@@ -315,22 +315,56 @@
             transform: translateX(-50%);
         }
 
-        .form-control:focus ~ .focus-border {
+        .form-control:focus~.focus-border {
             width: 100%;
             box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
         }
 
-        /* --- 10. UTILITIES (CHECKBOX & FORGOT PASSWORD) --- */
-        .form-utilities {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* Password Strength */
+        .password-strength {
+            margin-top: 8px;
+            padding: 0 4px;
+        }
+
+        .strength-bar {
+            height: 2px;
+            background: var(--border-color);
+            border-radius: 2px;
+            margin-bottom: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .strength-bar::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 25%;
+            background: var(--text-dark);
+            transition: all var(--transition-smooth);
+        }
+
+        .form-control[type="password"]:focus~.password-strength .strength-bar::after,
+        .form-control[type="text"]:focus~.password-strength .strength-bar::after {
+            width: 65%;
+            background: var(--accent-success);
+        }
+
+        .strength-text {
+            font-size: 0.75rem;
+            color: var(--text-dark);
+        }
+
+        /* --- CHECKBOX --- */
+        .form-options {
             margin: 1.5rem 0 2rem 0;
         }
 
         .custom-checkbox {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             cursor: pointer;
             position: relative;
         }
@@ -349,7 +383,7 @@
             background: transparent;
             border: 1px solid var(--text-dark);
             border-radius: 4px;
-            margin-right: 10px;
+            margin-right: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -366,13 +400,13 @@
             border-color: var(--text-muted);
         }
 
-        .custom-checkbox input:checked ~ .checkmark {
+        .custom-checkbox input:checked~.checkmark {
             background: var(--text-main);
             border-color: var(--text-main);
             color: var(--bg-base);
         }
 
-        .custom-checkbox input:checked ~ .checkmark svg {
+        .custom-checkbox input:checked~.checkmark svg {
             opacity: 1;
             transform: scale(1);
         }
@@ -382,18 +416,7 @@
             color: var(--text-muted);
         }
 
-        .forgot-link {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .forgot-link:hover {
-            color: var(--text-main);
-            text-decoration: underline;
-        }
-
-        /* --- 11. SUBMIT BUTTON --- */
+        /* --- SUBMIT BUTTON --- */
         .submit-btn {
             width: 100%;
             background: var(--text-main);
@@ -411,11 +434,6 @@
 
         .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255,255,255,0.1);
-        }
-
-        .submit-btn:active {
-            transform: translateY(0);
         }
 
         .btn-glow {
@@ -424,7 +442,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 60%);
             opacity: 0;
             transform: scale(0.5);
             transition: all 0.6s ease;
@@ -436,7 +454,6 @@
             transform: scale(1);
         }
 
-        /* --- 12. FOOTER --- */
         .form-footer {
             margin-top: 2rem;
             text-align: center;
@@ -445,26 +462,29 @@
         }
 
         .switch-link {
-            font-weight: 600;
+            font-weight: 500;
             color: var(--text-main);
             border-bottom: 1px solid var(--text-dark);
             padding-bottom: 2px;
         }
 
-        .switch-link:hover {
-            border-bottom-color: var(--text-main);
-            text-decoration: none;
-        }
-
-        /* --- 13. ENTRANCE ANIMATIONS --- */
-        .reveal-stagger > * {
+        /* --- ANIMATIONS & MEDIA QUERIES --- */
+        .reveal-stagger>* {
             opacity: 0;
             animation: fadeSlideRight 0.8s var(--transition-smooth) forwards;
         }
 
-        .reveal-stagger > *:nth-child(1) { animation-delay: 0.1s; }
-        .reveal-stagger > *:nth-child(2) { animation-delay: 0.2s; }
-        .reveal-stagger > *:nth-child(3) { animation-delay: 0.3s; }
+        .reveal-stagger>*:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .reveal-stagger>*:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .reveal-stagger>*:nth-child(3) {
+            animation-delay: 0.3s;
+        }
 
         .reveal-slide-up {
             opacity: 0;
@@ -473,19 +493,37 @@
         }
 
         @keyframes fadeSlideRight {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* --- 14. RESPONSIVE DESIGN FOR TABLETS & MOBILE --- */
-        @media (max-width: 1024px) {
-            .brand-title { font-size: 2.8rem; }
-            .brand-panel { padding: 3rem; }
+        @media (max-width: 992px) {
+            .brand-title {
+                font-size: 2.2rem;
+            }
+
+            .brand-panel {
+                padding: 2.5rem;
+            }
         }
 
         @media (max-width: 768px) {
@@ -494,33 +532,40 @@
                 height: auto;
                 min-height: 100vh;
             }
-            
+
             .brand-panel {
-                flex: none;
-                padding: 4rem 2rem;
+                padding: 3rem 2rem;
                 border-right: none;
                 border-bottom: 1px solid var(--border-color);
                 text-align: center;
                 align-items: center;
+                flex: none;
             }
-            
-            .brand-content { max-width: 100%; }
-            .logo { justify-content: center; margin-bottom: 2rem; }
-            .abstract-visual { display: none; }
-            .brand-footer { display: none; }
-            
+
+            .logo {
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+
+            .abstract-grid,
+            .brand-footer {
+                display: none;
+            }
+
             .form-panel {
-                padding: 4rem 2rem;
+                padding: 3rem 2rem;
                 align-items: flex-start;
             }
         }
 
         @media (max-width: 480px) {
-            .social-login { flex-direction: column; }
-            .form-utilities { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .social-login {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="split-container">
         <section class="brand-panel">
@@ -532,101 +577,132 @@
                     </svg>
                     <span>OpenNote</span>
                 </div>
-                
-                <h1 class="brand-title">Welcome back.</h1>
-                <p class="brand-desc">Access your second brain. Pick up right where you left off and continue building your personal knowledge base.</p>
-                
-                <div class="abstract-visual">
-                    <div class="circle c-1"></div>
-                    <div class="circle c-2"></div>
-                    <div class="circle c-3"></div>
-                    <div class="circle c-4"></div>
+                <h1 class="brand-title">The notebook that thinks with you.</h1>
+                <p class="brand-desc">Capture context, connect ideas, and build your personal knowledge base in a
+                    distraction-free dark environment.</p>
+                <div class="abstract-grid">
+                    <div class="grid-cell pulse-1"></div>
+                    <div class="grid-cell pulse-2"></div>
+                    <div class="grid-cell pulse-3"></div>
+                    <div class="grid-cell"></div>
                 </div>
             </div>
-            
             <div class="brand-footer">
-                <span>&copy; 2026 OpenNote Inc. | System Status: Operational</span>
+                <span>&copy; 2026 OpenNote Inc.</span>
             </div>
         </section>
 
         <section class="form-panel">
             <div class="form-wrapper reveal-slide-up">
-                
                 <header class="form-header">
-                    <h2>Log in</h2>
-                    <p>Enter your credentials to access your workspace.</p>
+                    <h2>Create an account</h2>
+                    <p>Start your journey today.</p>
                 </header>
 
                 <div class="social-login">
-                    <button type="button" class="oauth-btn google-btn">
+                    <button class="oauth-btn google-btn">
                         <svg viewBox="0 0 24 24" width="20" height="20">
-                            <path fill="#EA4335" d="M12 4.8c1.77 0 3.35.61 4.6 1.8L20.2 3C18.06 1.14 15.26 0 12 0 7.31 0 3.25 2.69 1.28 6.61l4.01 3.11C6.27 6.32 8.9 4.8 12 4.8z"/>
-                            <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3l3.86 3.01c2.26-2.08 3.56-5.14 3.56-8.83z"/>
-                            <path fill="#FBBC05" d="M5.29 9.72c-.24.71-.38 1.46-.38 2.28s.14 1.57.38 2.28l-4.01 3.11C.47 15.65 0 13.88 0 12s.47-3.65 1.28-5.39l4.01 3.11z"/>
-                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3.01c-1.08.72-2.45 1.14-4.07 1.14-3.1 0-5.73-2.09-6.67-4.91L1.28 17.39C3.25 21.31 7.31 24 12 24z"/>
+                            <path fill="#EA4335"
+                                d="M12 4.8c1.77 0 3.35.61 4.6 1.8L20.2 3C18.06 1.14 15.26 0 12 0 7.31 0 3.25 2.69 1.28 6.61l4.01 3.11C6.27 6.32 8.9 4.8 12 4.8z" />
+                            <path fill="#4285F4"
+                                d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3l3.86 3.01c2.26-2.08 3.56-5.14 3.56-8.83z" />
+                            <path fill="#FBBC05"
+                                d="M5.29 9.72c-.24.71-.38 1.46-.38 2.28s.14 1.57.38 2.28l-4.01 3.11C.47 15.65 0 13.88 0 12s.47-3.65 1.28-5.39l4.01 3.11z" />
+                            <path fill="#34A853"
+                                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3.01c-1.08.72-2.45 1.14-4.07 1.14-3.1 0-5.73-2.09-6.67-4.91L1.28 17.39C3.25 21.31 7.31 24 12 24z" />
                         </svg>
-                        <span>Google</span>
+                        <span>Continue with Google</span>
                     </button>
-                    
-                    <button type="button" class="oauth-btn github-btn">
+                    <button class="oauth-btn github-btn">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                         </svg>
-                        <span>GitHub</span>
                     </button>
                 </div>
 
                 <div class="divider">
                     <div class="line"></div>
-                    <span>or continue with email</span>
+                    <span>or sign up with email</span>
                     <div class="line"></div>
                 </div>
 
-                <form id="login-form" class="dynamic-form">
-                    
+                <form action="#" method="POST">
                     <div class="form-group floating-label">
-                        <input type="text" id="identity" class="form-control" placeholder=" " required autocomplete="username">
-                        <label for="identity">Email or Username</label>
+                        <input type="text" id="username" class="form-control" name="FullName" placeholder=" " required
+                            autocomplete="off">
+                        <label for="username">Username</label>
                         <div class="input-indicator">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
                         </div>
-                        <div class="focus-border"></div>
+                        <div class="focus-border" style="bottom: 0;"></div>
                     </div>
 
                     <div class="form-group floating-label">
-                        <input type="password" id="password" class="form-control" placeholder=" " required autocomplete="current-password">
-                        <label for="password">Password</label>
-                        <div class="input-indicator toggle-password" id="toggleIcon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <input type="email" id="email" class="form-control" name="Email" placeholder=" " required
+                            autocomplete="off">
+                        <label for="email">Email address</label>
+                        <div class="input-indicator">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                </path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
                         </div>
-                        <div class="focus-border"></div>
+                        <div class="focus-border" style="bottom: 0;"></div>
                     </div>
 
-                    <div class="form-utilities">
+                    <div class="form-group floating-label">
+                        <input type="password" id="password" class="form-control" name="Password" placeholder=" "
+                            required>
+                        <label for="password">Password</label>
+
+                        <div class="input-indicator toggle-password" id="toggleIcon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </div>
+
+                        <div class="focus-border" style="bottom: 25px;"></div>
+
+                        <div class="password-strength">
+                            <div class="strength-bar"></div>
+                            <span class="strength-text">Use 8+ characters with a mix of letters, numbers &
+                                symbols</span>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
                         <label class="custom-checkbox">
-                            <input type="checkbox" id="remember_me">
+                            <input type="checkbox" id="terms" required>
                             <span class="checkmark">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
                             </span>
-                            <span class="checkbox-label">Keep me logged in</span>
+                            <span class="checkbox-label">I agree to the <a href="#">Terms of Service</a> and <a
+                                    href="#">Privacy Policy</a>.</span>
                         </label>
-                        
-                        <a href="#" class="forgot-link">Forgot password?</a>
                     </div>
 
                     <div class="form-actions">
                         <button type="submit" class="submit-btn">
-                            <span class="btn-text">Log in now</span>
+                            <span class="btn-text">Create Account</span>
                             <div class="btn-glow"></div>
                         </button>
                     </div>
-                    
                 </form>
 
                 <footer class="form-footer">
-                    <p>Not a member yet? <a href="#" class="switch-link">Register now</a></p>
+                    <p>Already have an account? <a href="/login" class="switch-link">Sign in here</a></p>
                 </footer>
-
             </div>
         </section>
     </div>
@@ -635,13 +711,15 @@
         const toggleIcon = document.getElementById('toggleIcon');
         const passwordInput = document.getElementById('password');
 
-        if(toggleIcon && passwordInput) {
-            toggleIcon.addEventListener('click', function () {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                this.style.opacity = type === 'password' ? '1' : '0.5';
-            });
-        }
+        toggleIcon.addEventListener('click', function () {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Toggle opacity to indicate state change
+            this.style.opacity = type === 'password' ? '1' : '0.5';
+        });
     </script>
 </body>
+
 </html>
