@@ -8,6 +8,7 @@ import datetime
 import re
 import itertools
 import os
+import shutil
 import json
 import urllib.request
 import urllib.error
@@ -243,12 +244,14 @@ class MemoryEngine:
     def count(self) -> int:
         return self.collection.count()
 
-    def store(self, text: str, tags: list = None, starred: bool = False) -> str:
+    def store(self, text: str, tags: list = None, starred: bool = False, source: str = None) -> str:
         uid = f"MEM-{uuid.uuid4().hex[:6].upper()}"
         ts = datetime.datetime.now().isoformat()
         meta = {"ts": ts, "starred": starred}
         if tags:
             meta["tags"] = json.dumps(tags)
+        if source:
+            meta["source"] = source
         self.collection.add(
             ids=[uid],
             documents=[text],
@@ -301,27 +304,41 @@ class MemoryEngine:
             if before:
                 where.setdefault("ts", {})["$lte"] = before.isoformat()
 
-        if fuzzy:
+        query_lower = query.lower().strip()
+        has_tags = bool(tags)
+
+        if has_tags or fuzzy:
             n_results = min(n, self.count)
             all_ids, all_docs, all_metas = self.list_all()
-            query_lower = query.lower()
-            scored = []
-            for uid, doc, meta in zip(all_ids, all_docs, all_metas):
-                score = 0
-                q_words = set(query_lower.split())
-                doc_words = set(doc.lower().split())
-                intersection = q_words & doc_words
-                score = len(intersection)
-                if query_lower in doc.lower():
-                    score += 10
-                for qw in q_words:
-                    if qw in doc.lower():
-                        score += 5
-                scored.append((uid, doc, meta, score))
-            scored.sort(key=lambda x: x[3], reverse=True)
-            filtered = scored[:n_results]
-            docs = [x[1] for x in filtered]
-            metas = [x[2] for x in filtered]
+            if has_tags:
+                filtered = []
+                for uid, doc, meta in zip(all_ids, all_docs, all_metas):
+                    mem_tags = json.loads(meta.get("tags", "[]"))
+                    if any(t in mem_tags for t in tags):
+                        filtered.append((uid, doc, meta))
+                all_ids, all_docs, all_metas = zip(*filtered) if filtered else ([], [], [])
+            if fuzzy and query_lower:
+                query_lower = query.lower()
+                scored = []
+                for uid, doc, meta in zip(all_ids, all_docs, all_metas):
+                    score = 0
+                    q_words = set(query_lower.split())
+                    doc_words = set(doc.lower().split())
+                    intersection = q_words & doc_words
+                    score = len(intersection)
+                    if query_lower in doc.lower():
+                        score += 10
+                    for qw in q_words:
+                        if qw in doc.lower():
+                            score += 5
+                    scored.append((uid, doc, meta, score))
+                scored.sort(key=lambda x: x[3], reverse=True)
+                filtered = scored[:n_results]
+                docs = [x[1] for x in filtered]
+                metas = [x[2] for x in filtered]
+            else:
+                docs = list(all_docs[:n_results])
+                metas = list(all_metas[:n_results])
             if not docs:
                 docs, metas = [], []
         else:
@@ -343,6 +360,29 @@ class MemoryEngine:
             return existing["documents"][0], existing["metadatas"][0]
         except Exception:
             return "", {}
+
+    def add_related(self, uid: str, related_uid: str):
+        try:
+            doc, meta = self.get_by_id(uid)
+            if not doc:
+                return False
+            existing_related = json.loads(meta.get("related", "[]"))
+            if related_uid not in existing_related:
+                existing_related.append(related_uid)
+                self.collection.update(
+                    ids=[uid],
+                    metadatas=[{"related": json.dumps(existing_related)}]
+                )
+            return True
+        except Exception:
+            return False
+
+    def get_related(self, uid: str) -> list:
+        try:
+            _, meta = self.get_by_id(uid)
+            return json.loads(meta.get("related", "[]"))
+        except Exception:
+            return []
 
     def list_all(self, starred_only: bool = False) -> tuple[list, list, list]:
         where = {"starred": True} if starred_only else None
@@ -374,6 +414,48 @@ class MemoryEngine:
                 if self.delete_by_id(uid):
                     deleted += 1
         return deleted
+
+    def get_recent(self, n: int = 10) -> tuple[list, list, list]:
+        all_ids, all_docs, all_metas = self.list_all()
+        sorted_idx = sorted(
+            range(len(all_metas)),
+            key=lambda i: all_metas[i].get("ts", ""),
+            reverse=True
+        )
+        selected = sorted_idx[:n]
+        return (
+            [all_ids[i] for i in selected],
+            [all_docs[i] for i in selected],
+            [all_metas[i] for i in selected]
+        )
+
+    def get_random(self, n: int = 1) -> tuple[list, list, list]:
+        all_ids, all_docs, all_metas = self.list_all()
+        import random
+        selected = random.sample(range(len(all_ids)), min(n, len(all_ids)))
+        return (
+            [all_ids[i] for i in selected],
+            [all_docs[i] for i in selected],
+            [all_metas[i] for i in selected]
+        )
+
+    def get_timeline(self) -> list:
+        all_ids, all_docs, all_metas = self.list_all()
+        timeline = []
+        for uid, doc, meta in zip(all_ids, all_docs, all_metas):
+            ts = meta.get("ts", "")
+            date = ts[:10] if ts else "unknown"
+            timeline.append((date, uid, doc, meta))
+        timeline.sort(key=lambda x: x[0], reverse=True)
+        return timeline
+
+    def get_top_tags(self, n: int = 10) -> list:
+        from collections import Counter
+        all_ids, all_docs, all_metas = self.list_all()
+        tags = []
+        for m in all_metas:
+            tags.extend(json.loads(m.get("tags", "[]")))
+        return Counter(tags).most_common(n)
 
     def wipe(self):
         data = self.collection.get()
@@ -419,26 +501,185 @@ def _omni_quiet() -> bool:
     return os.environ.get("OMNI_QUIET", "").strip().lower() in ("1", "true", "yes")
 
 
+MEMORY_FORMAT = {
+    "id": "",
+    "content": "",
+    "source": "",
+    "tags": [],
+    "related": [],
+    "starred": False,
+    "created": "",
+    "updated": "",
+}
+
+
+def parse_text_to_memory(filepath: str) -> dict:
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(filepath)
+
+    filename = os.path.basename(filepath)
+    content = ""
+    raw_lines = []
+
+    with open(filepath, encoding="utf-8", errors="replace") as f:
+        raw_lines = [line.strip() for line in f if line.strip()]
+
+    content = "\n".join(raw_lines)
+
+    date_match = re.search(r"\d{4}-\d{2}-\d{2}", content)
+    extracted_date = date_match.group(0) if date_match else ""
+
+    title_line = raw_lines[0] if raw_lines else filename
+    if len(title_line) > 80:
+        title_line = title_line[:80] + "..."
+
+    tags_from_filename = [os.path.splitext(filename)[0].lower()]
+
+    keywords = ["meeting", "incident", "project", "log", "quote", "idea", "note", "task"]
+    for kw in keywords:
+        if kw in filename.lower():
+            tags_from_filename.append(kw)
+
+    return {
+        "source": filename,
+        "content": content,
+        "title": title_line,
+        "date": extracted_date,
+        "tags": tags_from_filename,
+    }
+
+
+def memory_to_rich_json(mem: dict, meta: dict) -> dict:
+    return {
+        "id": mem.get("id", ""),
+        "title": mem.get("title", mem.get("content", "")[:50]),
+        "content": mem.get("content", ""),
+        "source": meta.get("source", ""),
+        "tags": json.loads(meta.get("tags", "[]")),
+        "related": json.loads(meta.get("related", "[]")),
+        "starred": meta.get("starred", False),
+        "created": meta.get("ts", ""),
+        "updated": meta.get("ts", ""),
+    }
+
+
+def _parse_template(text: str, template: dict) -> dict:
+    result = {}
+    for field_name, _ in template["fields"]:
+        pattern = rf"-?\s*{field_name}:?\s*(.+)"
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            result[field_name] = match.group(1).strip()
+    return result
+
+
+def _render_template_fields(template: dict, values: dict = None) -> str:
+    lines = []
+    for field_name, description in template["fields"]:
+        value = values.get(field_name, "") if values else ""
+        lines.append(f"- {field_name}: {value}  ({description})")
+    return "\n".join(lines)
+
+
+def _template_to_text(template: dict, values: dict) -> str:
+    lines = [f"# {template['name']}", ""]
+    for field_name, description in template["fields"]:
+        value = values.get(field_name, "")
+        if value:
+            lines.append(f"- {field_name}: {value}")
+    return "\n".join(lines)
+
+
+def _template_to_json(template: dict, values: dict, uid: str) -> dict:
+    return {
+        "id": uid,
+        "template": list(TEMPLATES.keys())[list(TEMPLATES.values()).index(template)],
+        "data": values,
+    }
+
+
+def _template_to_markdown(values: dict, tags: list) -> str:
+    title = values.get("title") or values.get("name") or values.get("entry") or ""
+    parts = [title]
+    content = []
+    for k, v in values.items():
+        if k not in ("title", "name") and v:
+            content.append(f"**{k}**: {v}")
+    if content:
+        parts.append("\n".join(content))
+    if tags:
+        parts.append(" ".join(f"#{t}" for t in tags))
+    return " | ".join(parts)
+
+
+def _template_to_csv(memories: list, tags: list) -> str:
+    all_fields = set()
+    for m in memories:
+        all_fields.update(m.get("data", {}).keys())
+    fields = sorted(all_fields)
+    rows = ["id," + ",".join(fields) + ",tags"]
+    for m, t in zip(memories, tags):
+        row = [m.get("id", "")]
+        for f in fields:
+            val = m.get("data", {}).get(f, "").replace(",", ";")
+            row.append(val)
+        row.append(" ".join(t))
+        rows.append(",".join(row))
+    return "\n".join(rows)
+
+
 COMMANDS = [
     ("/add",     "store a fact with optional #tags"),
-    ("/key",     "set or update your Gemini API key"),
+    ("/import",  "import structured from template"),
+    ("/templates", "show available templates"),
     ("/list",    "browse memories with filters"),
-    ("/del",    "remove by ID, tag, or starred"),
+    ("/recent",  "show last N memories"),
+    ("/random",  "remind me of something"),
+    ("/stats",    "memory analytics"),
+    ("/related", "show linked memories"),
+    ("/del",     "remove by ID, tag, or starred"),
     ("/star",    "pin/unpin memories as important"),
     ("/starred", "list pinned memories"),
+    ("/tag",     "add tags to multiple memories"),
+    ("/merge",   "combine memories into one"),
+    ("/timeline", "view memories by date"),
     ("/alias",   "save/run query aliases"),
-    ("/ask",    "ask AI a question from memory"),
-    ("/export", "export memories to JSON/MD"),
-    ("/wipe",   "erase the entire trunk"),
-    ("/help",   "show this reference"),
-    ("/exit",   "quit omni"),
+    ("/export",  "export to CSV/MD/JSON"),
+    ("/wipe",    "erase the entire trunk"),
+    ("/help",    "show this reference"),
+    ("/exit",    "quit omni"),
 ]
 
 COMPLETER = WordCompleter(
-    [c for c, _ in COMMANDS] + ["alias save", "alias list", "alias run"],
+    [c for c, _ in COMMANDS] + ["alias save", "alias list", "alias run", "export json", "export md", "export csv", "#", "import", "templates"],
     pattern=re.compile(r"(/\w*)"),
     sentence=True,
 )
+
+SEARCH_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".omni_searches.json")
+
+
+def _load_searches() -> dict:
+    if not os.path.exists(SEARCH_DB):
+        return {}
+    try:
+        with open(SEARCH_DB, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_searches(searches: dict):
+    with open(SEARCH_DB, "w", encoding="utf-8") as f:
+        json.dump(searches, f, indent=2)
+
+
+def _track_search(query: str):
+    if not query or query.startswith("/"):
+        return
+    searches = _load_searches()
+    searches[query] = searches.get(query, 0) + 1
+    _save_searches(searches)
 
 # First token on a line must not be stored as /para body (e.g. user types /key while pasting)
 COMMAND_WORDS = frozenset(cmd.lower() for cmd, _ in COMMANDS)
@@ -497,13 +738,6 @@ def _render_logo_minimal():
 #  SPLASH SCREEN
 # ═══════════════════════════════════════════════════════════════
 
-def _api_key_status() -> str:
-    key = get_api_key()
-    if key:
-        masked = key[:6] + "•" * 8 + key[-3:]
-        return f"[{C_OK}]set[/{C_OK}]  [{C_DIM}]{masked}[/{C_DIM}]"
-    return f"[{C_ERR}]not set[/{C_ERR}]  [{C_DIM}]run /key to configure[/{C_DIM}]"
-
 def splash(engine: MemoryEngine):
     console.clear()
     if not _omni_quiet():
@@ -538,8 +772,6 @@ def splash(engine: MemoryEngine):
     stat_table.add_row("trunk",  f"{count} {'memory' if count == 1 else 'memories'}")
     stat_table.add_row("starred", str(starred))
     stat_table.add_row("tags",  str(len(all_tags)))
-    stat_table.add_row("engine", "chromadb")
-    stat_table.add_row("gemini", _api_key_status())
     stat_table.add_row("db",    ".omni_trunk/")
 
     console.print(
@@ -557,7 +789,6 @@ def splash(engine: MemoryEngine):
     hints = [
         ("/add",     "fact"),
         ("/list",    "browse"),
-        ("/starred", "pinned"),
         ("/help",   "commands"),
     ]
     parts = []
@@ -581,7 +812,7 @@ def print_statusbar(engine: MemoryEngine):
     t.append("  ·  ", style=C_DIM)
     t.append(mem, style=C_LAVENDER)
     t.append("  ·  ", style=C_DIM)
-    t.append("chromadb · hybrid-rag", style=C_DIM)
+    t.append("chromadb", style=C_DIM)
     console.print(t)
     console.print()
 
@@ -608,6 +839,13 @@ def show_help():
         )
     )
     console.print()
+    console.print(f"  [{C_DIM}]Query filters:[/{C_DIM}]")
+    console.print(f"  [{C_DIM}]  #tag      — filter by tag[/{C_DIM}]")
+    console.print(f"  [{C_DIM}]  after:2024-01-01 — date filter[/{C_DIM}]")
+    console.print(f"  [{C_DIM}]  last:week    — recent only[/{C_DIM}]")
+    console.print(f"  [{C_DIM}]  starred:yes — pinned only[/{C_DIM}]")
+    console.print(f"  [{C_DIM}]  fuzzy:yes   — keyword match[/{C_DIM}]")
+    console.print()
     console.print(f"  [{C_DIM}]Lines without a leading / are recall queries.[/{C_DIM}]")
     console.print()
 
@@ -616,7 +854,7 @@ def show_help():
 #  RECALL DISPLAY
 # ═══════════════════════════════════════════════════════════════
 
-def show_recall(docs: list[str], metas: list[dict], query: str):
+def show_recall(docs: list[str], metas: list[dict], query: str, highlight_query: str = None):
     if not docs:
         console.print()
         console.print(
@@ -643,8 +881,10 @@ def show_recall(docs: list[str], metas: list[dict], query: str):
         starred = meta.get("starred", False)
         tags = json.loads(meta.get("tags", "[]"))
 
+        display_doc = _highlight_matches(doc, highlight_query) if highlight_query else doc
+
         body = Text()
-        body.append(f"  {doc}\n", style=C_SYSTEM)
+        body.append(f"  {display_doc}\n", style=C_SYSTEM)
         if starred:
             body.append(f"  [{C_OK}]★[/{C_OK}]", style="")
         for t in tags:
@@ -764,10 +1004,12 @@ def _parse_query_filters(query: str) -> tuple[str, dict]:
             filters["after"] = now - datetime.timedelta(days=30)
     if starred_match:
         filters["starred_only"] = starred_match.group(1).lower() in ("1", "yes", "true")
+    if fuzzy_match:
+        filters["fuzzy"] = fuzzy_match.group(1).lower() in ("1", "yes", "true")
     if tags_match:
         filters["tags"] = tags_match
 
-    clean = re.sub(r"(after:|before:|last:|starred:)\S+", "", query)
+    clean = re.sub(r"(after:|before:|last:|starred:|fuzzy:)\S+", "", query)
     clean = re.sub(r"#\w+", "", clean).strip()
 
     return clean, filters
@@ -815,61 +1057,6 @@ def cmd_add(engine: MemoryEngine, session: PromptSession):
 
 
 
-
-
-def cmd_key(session: PromptSession):
-    """Set or update Gemini API key."""
-    current = get_api_key()
-    console.print()
-    if current:
-        masked = current[:6] + "•" * 8 + current[-3:]
-        console.print(
-            f"  [{C_DIM}]current key:[/{C_DIM}] [{C_ACCENT}]{masked}[/{C_ACCENT}]"
-        )
-        console.print(f"  [{C_DIM}]enter new key to replace, or press Enter to cancel[/{C_DIM}]\n")
-    else:
-        console.print(
-            f"  [{C_DIM}]get your free key at[/{C_DIM}] [{C_ACCENT}]aistudio.google.com[/{C_ACCENT}]"
-        )
-        console.print(f"  [{C_DIM}]enter Gemini API key:[/{C_DIM}]\n")
-
-    try:
-        key = session.prompt(
-            HTML(f'  <style color="{C_DIM}">key ›</style> '),
-            style=INPUT_STYLE,
-            is_password=True,
-        ).strip()
-    except (KeyboardInterrupt, EOFError):
-        console.print(f"  [{C_DIM}]cancelled[/{C_DIM}]\n")
-        return
-
-    if not key:
-        console.print(f"  [{C_DIM}]no change[/{C_DIM}]\n")
-        return
-
-    if len(key) < 12:
-        console.print(
-            f"  [{C_ERR}]✗[/{C_ERR}] [{C_DIM}]key is too short — nothing saved.[/{C_DIM}]\n"
-        )
-        return
-
-    if not key.startswith("AIza"):
-        console.print(
-            f"  [{C_DIM}]Note: Google AI Studio keys usually start with [/{C_DIM}]"
-            f"[{C_ACCENT}]AIza[/{C_ACCENT}]"
-            f"[{C_DIM}]. Saving what you entered.[/{C_DIM}]"
-        )
-
-    set_api_key(key)
-    masked = key[:6] + "•" * 8 + key[-3:]
-    console.print()
-    console.print(
-        f"  [{C_OK}]✓[/{C_OK}] [{C_DIM}]key saved[/{C_DIM}] [{C_ACCENT}]{masked}[/{C_ACCENT}]"
-    )
-    console.print(
-        f"  [{C_DIM}]stored at[/{C_DIM}] [{C_DIM}]{CONFIG_PATH}[/{C_DIM}]"
-    )
-    console.print()
 
 
 def cmd_star(engine: MemoryEngine, session: PromptSession):
@@ -981,91 +1168,401 @@ def cmd_alias(engine: MemoryEngine, session: PromptSession, action: str = "list"
         console.print()
 
 
-def cmd_ask(engine: MemoryEngine, session: PromptSession):
-    api_key = get_api_key()
-    if not api_key:
-        console.print(
-            f"  [{C_ERR}]✗[/{C_ERR}] [{C_DIM}]set API key first with /key[/{C_DIM}]"
-        )
-        console.print()
-        return
-
+def cmd_recent(engine: MemoryEngine, session: PromptSession):
+    console.print()
     try:
-        question = session.prompt(
-            HTML(f'  <style color="{C_DIM}">question ›</style> '),
+        n_str = session.prompt(
+            HTML(f'  <style color="{C_DIM}">how many (default 10) ›</style> '),
             style=INPUT_STYLE,
         ).strip()
     except (KeyboardInterrupt, EOFError):
         console.print(f"  [{C_DIM}]cancelled[/{C_DIM}]\n")
         return
 
-    if not question:
-        return
+    n = int(n_str) if n_str.isdigit() else 10
+    ids, docs, metas = engine.get_recent(n)
+    show_list(ids, docs, metas)
 
-    _spin("searching memory", duration=0.5, color=C_LAVENDER)
-    docs, metas = engine.recall(question, n=10)
 
-    if not docs:
-        console.print()
-        console.print(f"  [{C_DIM}]no memories found to answer from[/{C_DIM}]")
-        console.print()
-        return
+def cmd_templates(engine: MemoryEngine):
+    console.print()
+    table = Table(box=None, padding=(0, 2), show_header=False)
+    table.add_column("name", style=C_ACCENT, no_wrap=True, width=12)
+    table.add_column("desc", style=C_DIM)
 
-    context = "\n\n".join(f"- {d}" for d in docs)
-    prompt = f"""Based only on these memories, answer the question.
+    for key, tmpl in TEMPLATES.items():
+        table.add_row(key, tmpl["name"])
 
-Memories:
-{context}
-
-Question: {question}
-
-Answer:"""
-
-    _spin("asking AI", duration=1.0, color=C_LAVENDER)
-    payload = json.dumps(
-        {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "temperature": 0.3,
-                "maxOutputTokens": 2048,
-            },
-            "safetySettings": _GEMINI_SAFETY,
-        },
-        ensure_ascii=False,
-    ).encode("utf-8")
-
-    url = _gemini_url(api_key)
-    req = urllib.request.Request(
-        url,
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
+    console.print(
+        Panel(
+            table,
+            box=box.ROUNDED,
+            border_style=C_DIM,
+            title=f"[{C_DIM}]templates[/{C_DIM}]",
+            padding=(0, 1),
+        )
     )
 
+    console.print(f"  [{C_DIM}]use /import to create from template[/{C_DIM}]")
+    console.print()
+
+
+def _autoimport_file(filepath: str, template: dict, tags: list = None) -> str:
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(filepath)
+
+    with open(filepath, encoding="utf-8") as f:
+        raw = f.read()
+
+    parsed = _parse_template(raw, template)
+
+    values = {}
+    for field_name, description in template["fields"]:
+        value = parsed.get(field_name, "")
+        if value:
+            values[field_name] = value
+
+    if not values:
+        lines = [l.strip() for l in raw.split("\n") if l.strip()]
+        for field_name, _ in template["fields"]:
+            if lines:
+                values[field_name] = lines.pop(0)
+            else:
+                values[field_name] = ""
+
+    text = _template_to_text(template, values)
+    return text
+
+
+IMPORT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "drop")
+
+
+def cmd_import(engine: MemoryEngine, session: PromptSession, file_path: str = None):
+    files_to_import = []
+
+    if not file_path:
+        if not os.path.exists(IMPORT_DIR):
+            os.makedirs(IMPORT_DIR, exist_ok=True)
+            console.print(f"  [{C_DIM}]created drop folder:[/{C_DIM}] {IMPORT_DIR}")
+            console.print()
+            console.print(f"  [{C_DIM}]drop files there, then run[/{C_DIM}] /import")
+            console.print()
+            return
+
+        files_to_import = [
+            f for f in os.listdir(IMPORT_DIR)
+            if os.path.isfile(os.path.join(IMPORT_DIR, f)) and not f.startswith(".")
+        ]
+
+        if not files_to_import:
+            console.print(f"  [{C_DIM}]no files in drop folder[/{C_DIM}]")
+            console.print(f"  [{C_DIM}]drop files in:[/{C_DIM}] {IMPORT_DIR}")
+            console.print()
+            return
+
+        console.print(f"  [{C_DIM}]found[/{C_DIM}] {len(files_to_import)} files")
+        console.print()
+
+        for filename in files_to_import:
+            full_path = os.path.join(IMPORT_DIR, filename)
+            try:
+                mem_data = parse_text_to_memory(full_path)
+                content = mem_data["content"]
+                tags = mem_data["tags"]
+
+                if content:
+                    _spin(f"storing {filename}", duration=0.3)
+                    uid = engine.store(content, tags=tags, source=full_path)
+                    print(f"  [{C_OK}]✓[/{C_OK}] {filename} → {uid}")
+            except Exception as e:
+                print(f"  [{C_ERR}]✗[/{C_ERR}] {filename}: {e}")
+
+        console.print()
+        console.print(f"  [{C_OK}]✓[/{C_OK}] [{C_DIM}]imported[/{C_DIM}] {len(files_to_import)} files")
+        console.print()
+
+        for f in files_to_import:
+            dst = f"{IMPORT_DIR}/imported/{f}"
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.move(os.path.join(IMPORT_DIR, f), dst)
+
+        return
+
+    if os.path.isfile(file_path):
+        console.print(f"  [{C_DIM}]importing[/{C_DIM}] {file_path}")
+
+        try:
+            mem_data = parse_text_to_memory(file_path)
+        except Exception as e:
+            console.print(f"  [{C_ERR}]✗[/{C_ERR}] [{C_DIM}]error: {e}[/{C_DIM}]")
+            return
+
+        content = mem_data["content"]
+        tags = mem_data["tags"]
+
+        if not content:
+            console.print(f"  [{C_ERR}]✗[/{C_ERR}] [{C_DIM}]empty file[/{C_DIM}]")
+            return
+
+        _spin("storing", duration=0.5)
+        uid = engine.store(content, tags=tags, source=file_path)
+
+        console.print()
+        console.print(
+            f"  [{C_OK}]✓[/{C_OK}] [{C_DIM}]stored as[/{C_DIM}] [{C_ACCENT}]{uid}[/{C_ACCENT}]"
+        )
+        console.print(f"  [{C_DIM}]source:[/{C_DIM}] {mem_data['source']}")
+        console.print(f"  [{C_DIM}]tags:[/{C_DIM}] " + " ".join(f"#{t}" for t in tags))
+        console.print(f"  [{C_DIM}]date:[/{C_DIM}] {mem_data['date'] or 'auto'}")
+        console.print()
+        return
+
+
+def cmd_related(engine: MemoryEngine, session: PromptSession):
+    console.print()
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-        answer = _gemini_response_text(data)
-    except Exception as e:
-        console.print(f"  [{C_ERR}]✗[/{C_ERR}] [{C_DIM}]AI error: {e}[/{C_DIM}]")
+        uid = session.prompt(
+            HTML(f'  <style color="{C_DIM}">memory ID ›</style> '),
+            style=INPUT_STYLE,
+        ).strip().upper()
+    except (KeyboardInterrupt, EOFError):
+        console.print(f"  [{C_DIM}]cancelled[/{C_DIM}]\n")
+        return
+
+    if not uid:
+        return
+
+    related = engine.get_related(uid)
+    if not related:
+        console.print(f"  [{C_DIM}]no related memories[/{C_DIM}]")
+        console.print()
+        return
+
+    related_docs = []
+    related_metas = []
+    for r_uid in related:
+        doc, meta = engine.get_by_id(r_uid)
+        if doc:
+            related_docs.append(doc)
+            related_metas.append(meta)
+
+    console.print(f"  [{C_DIM}]related to {uid}:[/{C_DIM}]")
+    show_list(related, related_docs, related_metas)
+
+
+def cmd_random(engine: MemoryEngine, session: PromptSession):
+    console.print()
+    try:
+        n_str = session.prompt(
+            HTML(f'  <style color="{C_DIM}">how many (default 1) ›</style> '),
+            style=INPUT_STYLE,
+        ).strip()
+    except (KeyboardInterrupt, EOFError):
+        console.print(f"  [{C_DIM}]cancelled[/{C_DIM}]\n")
+        return
+
+    n = int(n_str) if n_str.isdigit() else 1
+    ids, docs, metas = engine.get_random(n)
+    console.print()
+    _cascade_ids(ids, delay=0)
+    show_list(ids, docs, metas)
+
+
+def cmd_stats(engine: MemoryEngine):
+    ids, docs, metas = engine.list_all()
+    if not ids:
+        console.print()
+        console.print(f"  [{C_DIM}]no memories yet[/{C_DIM}]")
+        console.print()
+        return
+
+    total = len(ids)
+    starred = sum(1 for m in metas if m.get("starred", False))
+    top_tags = engine.get_top_tags(5)
+
+    searches = _load_searches()
+    top_searches = sorted(searches.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    stat_table = Table(box=None, show_header=False, padding=(0, 3))
+    stat_table.add_column("k", style=C_DIM, no_wrap=True, width=14)
+    stat_table.add_column("v", style="bold " + C_USER, no_wrap=True)
+
+    stat_table.add_row("memories", str(total))
+    stat_table.add_row("starred", str(starred))
+    stat_table.add_row("tags", str(sum(1 for m in metas if m.get("tags", "[]") != "[]")))
+
+    console.print()
+    console.print(
+        Panel(
+            stat_table,
+            box=box.ROUNDED,
+            border_style=C_DIM,
+            padding=(0, 2),
+            title=f"[{C_DIM}]overview[/{C_DIM}]",
+        )
+    )
+
+    if top_tags:
+        console.print()
+        console.print(f"  [{C_DIM}]top tags:[/{C_DIM}]")
+        for tag, count in top_tags:
+            bar = "█" * count
+            console.print(f"    [{C_LAVENDER}]{tag}[/{C_LAVENDER}] {bar} {count}")
+
+    if top_searches:
+        console.print()
+        console.print(f"  [{C_DIM}]frequent searches:[/{C_DIM}]")
+        for query, count in top_searches:
+            console.print(f"    [{C_ACCENT}]{query}[/{C_ACCENT}] ×{count}")
+
+    console.print()
+
+
+def cmd_timeline(engine: MemoryEngine):
+    timeline = engine.get_timeline()
+    if not timeline:
+        console.print()
+        console.print(f"  [{C_DIM}]no memories[/{C_DIM}]")
         console.print()
         return
 
     console.print()
-    console.print(Panel(
-        answer,
-        box=box.ROUNDED,
-        border_style=C_DIM,
-        padding=(1, 2),
-        title=f"[{C_DIM}]answer[/{C_DIM}]",
-    ))
+    current_date = None
+    for date, uid, doc, meta in timeline:
+        if date != current_date:
+            console.print()
+            console.print(f"  [{C_DIM}]─ {date} ─[/{C_DIM}]")
+            current_date = date
+        tags = json.loads(meta.get("tags", "[]"))
+        tags_str = " ".join(f"#{t}" for t in tags) if tags else ""
+        star = "★" if meta.get("starred", False) else " "
+        console.print(f"  [{C_ACCENT}]{uid}[/{C_ACCENT}] {star} {doc[:60]}{'...' if len(doc) > 60 else ''}")
+        if tags_str:
+            console.print(f"       [{C_LAVENDER}]{tags_str}[/{C_LAVENDER}]")
+    console.print()
+
+
+def cmd_tag(engine: MemoryEngine, session: PromptSession):
+    ids, docs, metas = engine.list_all()
+    if not ids:
+        console.print()
+        console.print(f"  [{C_DIM}]no memories to tag[/{C_DIM}]")
+        console.print()
+        return
+
+    console.print()
+    console.print(f"  [{C_DIM}]IDs to tag (e.g. MEM-123 MEM-456) ›[/{C_DIM}]")
+    try:
+        ids_input = session.prompt(
+            HTML(f'  <style color="{C_DIM}">IDs ›</style> '),
+            style=INPUT_STYLE,
+        ).strip()
+    except (KeyboardInterrupt, EOFError):
+        console.print(f"  [{C_DIM}]cancelled[/{C_DIM}]\n")
+        return
+
+    target_ids = [i.strip().upper() for i in ids_input.split() if i.strip()]
+    if not target_ids:
+        return
+
+    console.print(f"  [{C_DIM}]tags to add (space separated) ›[/{C_DIM}]")
+    try:
+        tags_input = session.prompt(
+            HTML(f'  <style color="{C_DIM}">tags ›</style> '),
+            style=INPUT_STYLE,
+        ).strip()
+    except (KeyboardInterrupt, EOFError):
+        console.print(f"  [{C_DIM}]cancelled[/{C_DIM}]\n")
+        return
+
+    new_tags = [t.strip().lstrip("#") for t in tags_input.split() if t.strip()]
+    if not new_tags:
+        return
+
+    tagged = 0
+    for uid in target_ids:
+        doc, meta = engine.get_by_id(uid)
+        if doc:
+            existing = json.loads(meta.get("tags", "[]"))
+            combined = list(set(existing + new_tags))
+            engine.update(uid, tags=combined)
+            tagged += 1
+
+    console.print(
+        f"  [{C_OK}]✓[/{C_OK}] [{C_DIM}]added #[/{C_DIM}]" + ", #".join(new_tags) +
+        f" [{C_DIM}]to[/{C_DIM}] {tagged} memories"
+    )
+    console.print()
+
+
+def cmd_merge(engine: MemoryEngine, session: PromptSession):
+    console.print()
+    console.print(f"  [{C_DIM}]IDs to merge (2+) ›[/{C_DIM}]")
+    try:
+        ids_input = session.prompt(
+            HTML(f'  <style color="{C_DIM}">IDs ›</style> '),
+            style=INPUT_STYLE,
+        ).strip()
+    except (KeyboardInterrupt, EOFError):
+        console.print(f"  [{C_DIM}]cancelled[/{C_DIM}]\n")
+        return
+
+    target_ids = [i.strip().upper() for i in ids_input.split() if i.strip()]
+    if len(target_ids) < 2:
+        console.print(f"  [{C_ERR}]✗[/{C_ERR}] [{C_DIM}]need 2+ IDs[/{C_DIM}]")
+        console.print()
+        return
+
+    docs = []
+    all_tags = set()
+    existing_ids = []
+    for uid in target_ids:
+        doc, meta = engine.get_by_id(uid)
+        if doc:
+            docs.append(doc)
+            existing_ids.append(uid)
+            all_tags.update(json.loads(meta.get("tags", "[]")))
+
+    if len(docs) < 2:
+        console.print(f"  [{C_ERR}]✗[/{C_ERR}] [{C_DIM}]couldn't find memories[/{C_DIM}]")
+        console.print()
+        return
+
+    console.print()
+    for i, doc in enumerate(docs):
+        console.print(f"  [{C_DIM}]{i+1}.[/{C_DIM}] {doc[:60]}")
+    console.print()
+
+    console.print(f"  [{C_DIM}]merged text ›[/{C_DIM}]")
+    try:
+        merged_text = session.prompt(
+            HTML(f'  <style color="{C_DIM}">text ›</style> '),
+            style=INPUT_STYLE,
+        ).strip()
+    except (KeyboardInterrupt, EOFError):
+        console.print(f"  [{C_DIM}]cancelled[/{C_DIM}]\n")
+        return
+
+    if not merged_text:
+        merged_text = " | ".join(docs)
+
+    new_tags = list(all_tags)
+    _spin("merging", duration=0.5)
+    new_uid = engine.store(merged_text, tags=new_tags)
+
+    for uid in existing_ids:
+        engine.delete_by_id(uid)
+
+    console.print(
+        f"  [{C_OK}]✓[/{C_OK}] [{C_DIM}]merged into[/{C_DIM}] [{C_ACCENT}]{new_uid}[/{C_ACCENT}]"
+    )
     console.print()
 
 
 def cmd_export(engine: MemoryEngine, session: PromptSession):
     try:
         fmt = session.prompt(
-            HTML(f'  <style color="{C_DIM}">format (json/md) ›</style> '),
+            HTML(f'  <style color="{C_DIM}">format (json/md/csv/frontmatter) ›</style> '),
             style=INPUT_STYLE,
         ).strip().lower()
     except (KeyboardInterrupt, EOFError):
@@ -1082,21 +1579,77 @@ def cmd_export(engine: MemoryEngine, session: PromptSession):
         console.print()
         return
 
+    ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+
     if fmt == "json":
+        data = []
+        for uid, doc, meta in zip(ids, docs, metas):
+            data.append(memory_to_rich_json({"id": uid, "content": doc}, meta))
+        filename = f"omni_memory_{ts}.json"
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+    elif fmt == "rich":
         data = []
         for uid, doc, meta in zip(ids, docs, metas):
             data.append({
                 "id": uid,
-                "text": doc,
+                "content": doc,
+                "source": meta.get("source", ""),
                 "tags": json.loads(meta.get("tags", "[]")),
+                "related": json.loads(meta.get("related", "[]")),
                 "starred": meta.get("starred", False),
-                "ts": meta.get("ts", ""),
+                "created": meta.get("ts", ""),
+                "updated": meta.get("ts", ""),
+                "metadata": {
+                    "imported_from_file": True,
+                    "format_version": "1.0",
+                }
             })
-        filename = f"omni_export_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = f"omni_rich_{ts}.json"
         with open(filename, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+            json.dump({
+                "version": "1.0",
+                "exported": datetime.datetime.now().isoformat(),
+                "count": len(data),
+                "memories": data,
+            }, f, indent=2)
+
+    elif fmt == "csv":
+        filename = f"omni_export_{ts}.csv"
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write("id,text,tags,related,starred,ts\n")
+            for uid, doc, meta in zip(ids, docs, metas):
+                tags = " ".join(json.loads(meta.get("tags", "[]")))
+                related = " ".join(json.loads(meta.get("related", "[]")))
+                starred = str(meta.get("starred", False))
+                ts_val = meta.get("ts", "")
+                doc_escaped = doc.replace('"', '""').replace("\n", " ")
+                f.write(f'"{uid}","{doc_escaped}","{tags}","{related}","{starred}","{ts_val}"\n')
+
+    elif fmt == "frontmatter":
+        filename = f"omni_export_{ts}.md"
+        with open(filename, "w", encoding="utf-8") as f:
+            for uid, doc, meta in zip(ids, docs, metas):
+                tags = json.loads(meta.get("tags", "[]"))
+                related = json.loads(meta.get("related", "[]"))
+                starred = meta.get("starred", False)
+                ts_val = meta.get("ts", "")
+
+                frontmatter = f"""---
+id: {uid}
+tags: {', '.join(tags)}
+related: {', '.join(related)}
+starred: {starred}
+date: {ts_val[:10] if ts_val else ''}
+---
+
+{doc}
+
+"""
+                f.write(frontmatter)
     else:
-        filename = f"omni_export_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        filename = f"omni_export_{ts}.md"
         with open(filename, "w", encoding="utf-8") as f:
             for uid, doc, meta in zip(ids, docs, metas):
                 tags = json.loads(meta.get("tags", "[]"))
@@ -1225,7 +1778,22 @@ def cmd_wipe(engine: MemoryEngine, session: PromptSession):
     console.print()
 
 
+def _highlight_matches(text: str, query: str) -> str:
+    if not query or not text:
+        return text
+    query_lower = query.lower()
+    words = [w for w in query_lower.split() if len(w) > 2]
+    if not words:
+        return text
+    result = text
+    for word in words:
+        if word.lower() in text.lower():
+            result = result.replace(word, f"[{C_OK}]{word}[/{C_OK}]", 1)
+    return result
+
+
 def handle_recall(engine: MemoryEngine, query: str):
+    _track_search(query)
     query_text, filters = _parse_query_filters(query)
     _spin("scanning memory", duration=0.6, color=C_LAVENDER)
     docs, metas = engine.recall(
@@ -1235,8 +1803,9 @@ def handle_recall(engine: MemoryEngine, query: str):
         starred_only=filters.get("starred_only", False),
         after=filters.get("after"),
         before=filters.get("before"),
+        fuzzy=filters.get("fuzzy", False),
     )
-    show_recall(docs, metas, query)
+    show_recall(docs, metas, query, highlight_query=query_text if query_text else None)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1285,12 +1854,41 @@ def main():
             cmd_add(engine, session)
             print_statusbar(engine)
 
-        elif cmd == "/key":
-            cmd_key(session)
+        elif cmd == "/templates":
+            cmd_templates(engine)
+
+        elif cmd == "/import":
+            parts = raw.split(maxsplit=1)
+            file_arg = parts[1].strip() if len(parts) > 1 else None
+            cmd_import(engine, session, file_arg)
+            print_statusbar(engine)
+
+        elif cmd == "/related":
+            cmd_related(engine, session)
 
         elif cmd == "/list":
             ids, docs, metas = engine.list_all()
             show_list(ids, docs, metas)
+
+        elif cmd == "/recent":
+            cmd_recent(engine, session)
+
+        elif cmd == "/random":
+            cmd_random(engine, session)
+
+        elif cmd == "/stats":
+            cmd_stats(engine)
+
+        elif cmd == "/timeline":
+            cmd_timeline(engine)
+
+        elif cmd == "/tag":
+            cmd_tag(engine, session)
+            print_statusbar(engine)
+
+        elif cmd == "/merge":
+            cmd_merge(engine, session)
+            print_statusbar(engine)
 
         elif cmd == "/del":
             cmd_del(engine, session)
@@ -1316,9 +1914,6 @@ def main():
             else:
                 cmd_alias(engine, session, "list")
 
-        elif cmd == "/ask":
-            cmd_ask(engine, session)
-
         elif cmd == "/export":
             cmd_export(engine, session)
 
@@ -1341,4 +1936,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-omni-cli.py
